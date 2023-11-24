@@ -8,4 +8,4 @@ ESTSoft Wassup 1기 첫번째 프로젝트
 김범찬:
 박지연:
 송승민: ISTP
-이유성:
+이유성: INFP

@@ -13,6 +13,7 @@ import argparse
 from nn.validation import *
 from tqdm.auto import tqdm
 from torch.utils.data import TensorDataset 
+from nn.early_stop import EarlyStopper
 
 device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
 #print(device)
@@ -71,6 +72,7 @@ def evaluate(
       #correct += (output.argmax(1) == y).type(torch.float).sum().item()
       if metric is not None:
         #print(output.squeeze(1).squeeze(),y.squeeze(1).squeeze())
+        output = torch.round(output)
         metric.update_state(output, y)
   #acc = correct / len(data_loader.dataset)
   total_loss = total_loss/len(data_loader.dataset)
@@ -102,9 +104,13 @@ def main(args):
       pbar = tqdm(pbar)
     
     print("Learning Start!")
+    early_stopper = EarlyStopper(args.patience ,args.min_delta)
     for _ in pbar:
       loss = train(model, nn.functional.mse_loss, optimizer, dl, device)
       pbar.set_postfix(trn_loss=loss)
+      if early_stopper.early_stop(loss): 
+        print('Early Stopper run!')            
+        break
     #evaluate(model, nn.functional.binary_cross_entropy, dl, device)    
     print("Done!")
     torch.save(model.state_dict(), args.output)
@@ -126,7 +132,7 @@ def main(args):
   
   print('------------------------------------------------------------------')
   if args.validation == True:
-    scores = Validation(X_trn, y_trn)
+    scores = Validation(X_trn, y_trn, args.patience ,args.min_delta)
     scores = pd.DataFrame(scores.kfold(model, n_splits=5, epochs=args.epochs, shuffle=True, random_state=2023))
     print(pd.concat([scores, scores.apply(['mean', 'std'])]))
     
@@ -151,6 +157,9 @@ def get_args_parser(add_help=True):
   parser.add_argument("-sub", "--submission", default="./submission.csv", type=str, help="path to save submission")
   parser.add_argument("-train", "--train", default=False, type=bool, help="full data set train")
   parser.add_argument("-val", "--validation", default=False, type=bool, help="kfold cross validation train")
+  parser.add_argument("-pat", "--patience", default=3, type=bool, help="Early stop patience count")
+  parser.add_argument("-delta", "--min-delta", default=0, type=bool, help="Early stop delta value")
+  
   
   return parser
 

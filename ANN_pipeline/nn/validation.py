@@ -14,9 +14,12 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from train import train, evaluate 
 from copy import deepcopy
+from nn.early_stop import EarlyStopper
 
 class Validation:
-  def __init__(self, X_trn, y_trn):
+  def __init__(self, X_trn, y_trn,patience,delta):
+    self.patience = patience
+    self.delta = delta
     self.X, self.y = 0,0 
     self.X_trn = X_trn
     self.y_trn = y_trn
@@ -47,22 +50,24 @@ class Validation:
       ds_val = TensorDataset(X_val, y_val)
       # ds = CustomDataset(X, y)
       # ds_val = CustomDataset(X_val, y_val)
-      dl = DataLoader(ds, batch_size=32, shuffle=True)
+      dl = DataLoader(ds, batch_size=64, shuffle=True)
       dl_val = DataLoader(ds_val, batch_size=len(ds_val), shuffle=False)
 
       net = nets[i]
+      net.eval()
       optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
       
       pbar = range(epochs)
       pbar = tqdm(pbar)
-
+      early_stopper = EarlyStopper(self.patience, self.delta)
       for j in pbar:
         accuracy = tf.keras.metrics.Accuracy()
         loss = train(net, nn.functional.mse_loss, optimizer, dl, device)
         loss_val = evaluate(net, nn.functional.mse_loss, dl_val, device, accuracy)
         acc_val = accuracy.result().numpy()
         pbar.set_postfix(trn_loss=loss, val_loss=loss_val, val_acc=acc_val)
-      
+        if early_stopper.early_stop(loss_val):             
+          break
       net = nets[i].to(device)
       self.pred = net(self.X)
       self.pred = torch.round(self.pred)

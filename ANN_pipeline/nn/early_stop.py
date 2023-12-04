@@ -9,7 +9,7 @@ class EarlyStopper:
             patience: patience value of step -> int
             min_delta: min change amount for early stop -> int
     '''
-    def __init__(self, patience:int=1, min_delta:int=0):
+    def __init__(self, patience:int=3, min_delta:int=0):
         self.patience = patience
         self.min_delta = min_delta
         self.counter = 0

@@ -19,19 +19,20 @@ class ANN(nn.Module):
   def __init__(self, input:int=5, hidden:int=64):
     super().__init__()
     self.linear_stack = nn.Sequential(
-        nn.Linear(input,hidden),     #(5,64)
+        nn.Linear(input,hidden),     #(13,64)
         nn.ReLU(),
-        #nn.Dropout(0.3),
+        nn.Dropout(0.3),
         nn.Linear(hidden,hidden*2),  #(64,128)
         nn.ReLU(),
-        #nn.Dropout(0.3),
+        nn.Dropout(0.3),
         nn.Linear(hidden*2,hidden*4), #(128,256)
         nn.ReLU(),
-        #nn.Dropout(0.3),     
+        nn.Dropout(0.3),     
         nn.Linear(hidden*4,hidden*4),
         nn.ReLU(),
-        #nn.Dropout(0.3),
-        nn.Linear(hidden*4,1)          #(256,1)
+        nn.Dropout(0.3),
+        nn.Linear(hidden*4,1),          #(256,1)
+        nn.ReLU()
         )
     
   def forward(self, x:list):

@@ -5,7 +5,7 @@ import torchmetrics
 from typing import Optional
 import numpy as np
 import pandas as pd
-from nn.preprocess import preprosess_Module
+from datasets.preprocess import preprosess_Module
 from nn.model import ANN
 from nn.utils import CustomDataset
 from tqdm.auto import tqdm
@@ -14,6 +14,8 @@ from nn.validation import *
 from tqdm.auto import tqdm
 from torch.utils.data import TensorDataset 
 from nn.early_stop import EarlyStopper
+from nn.rmsle import RMSLELoss
+from datasets.dataset import get_X, get_y
 
 device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
 #print(device)
@@ -85,10 +87,8 @@ def main(args):
   submission_df = pd.read_csv(args.data_submission)
   train_df = pd.read_csv(args.data_train)
   test_df = pd.read_csv(args.data_test)
-  preprocess = preprosess_Module(train_df)
-  preprocess_ = preprosess_Module(test_df)
-  X_trn, X_val = preprocess.get_X(train_df,test_df)
-  y_trn = preprocess_.get_y(train_df)[:,np.newaxis]
+  X_trn, X_val = get_X(train_df,test_df)
+  y_trn = get_y(train_df,test_df)[:,np.newaxis]
   ds = CustomDataset(X_trn.astype(np.float32), y_trn.astype(np.float32))
   ds_val = CustomDataset(X_val.astype(np.float32))
   dl = DataLoader(ds, batch_size=args.batch_size, shuffle=args.shuffle)
@@ -96,9 +96,9 @@ def main(args):
 
   model = ANN(X_trn.shape[-1] ,args.hidden_dim).to(device)
   print(model)
-  optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-  
-  if args.train is True:
+  optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
+
+  if args.train:
     pbar = range(args.epochs)
     if args.pbar:
       pbar = tqdm(pbar)
@@ -106,9 +106,9 @@ def main(args):
     print("Learning Start!")
     early_stopper = EarlyStopper(args.patience ,args.min_delta)
     for _ in pbar:
-      loss = train(model, nn.functional.mse_loss, optimizer, dl, device)
+      loss = train(model, RMSLELoss(), optimizer, dl, device)
       pbar.set_postfix(trn_loss=loss)
-      if early_stopper.early_stop(loss): 
+      if early_stopper.early_stop(loss):
         print('Early Stopper run!')            
         break
     #evaluate(model, nn.functional.binary_cross_entropy, dl, device)    
@@ -124,16 +124,16 @@ def main(args):
       for x in dl_val:
         x = x[0].to(device)
         out = model(x)
-        out = torch.round(out)
         pred.append(out.detach().cpu().numpy())
     
-    submission_df['ECLO'] = [int(i) for i in np.concatenate(pred).squeeze()]
+    submission_df['ECLO'] = np.concatenate(pred).squeeze()
     submission_df.to_csv(args.submission,index=False)
   
   print('------------------------------------------------------------------')
-  if args.validation == True:
-    scores = Validation(X_trn, y_trn, args.patience ,args.min_delta)
-    scores = pd.DataFrame(scores.kfold(model, n_splits=5, epochs=args.epochs, shuffle=True, random_state=2023))
+  if args.validation:
+    model = ANN(X_trn.shape[-1] ,args.hidden_dim).to(device)
+    scores = Validation(X_trn, y_trn, args.patience, args.min_delta)
+    scores = pd.DataFrame(scores.kfold(model, n_splits=5, epochs=args.epochs, lr=args.lr, batch=args.batch_size, shuffle=True, random_state=2023))
     print(pd.concat([scores, scores.apply(['mean', 'std'])]))
     
   return
@@ -153,12 +153,12 @@ def get_args_parser(add_help=True):
   parser.add_argument("--epochs", default=100, type=int, metavar="N", help="number of total epochs to run")
   parser.add_argument("--lr", default=0.001, type=float, help="learning rate")
   parser.add_argument("--pbar", default=True, type=bool, help="progress bar")
-  parser.add_argument("-o", "--output", default="./model.pth", type=str, help="path to save output model")
-  parser.add_argument("-sub", "--submission", default="./submission.csv", type=str, help="path to save submission")
+  parser.add_argument("-o", "--output", default="./submit/model.pth", type=str, help="path to save output model")
+  parser.add_argument("-sub", "--submission", default="./submit/submission.csv", type=str, help="path to save submission")
   parser.add_argument("-train", "--train", default=False, type=bool, help="full data set train")
   parser.add_argument("-val", "--validation", default=False, type=bool, help="kfold cross validation train")
-  parser.add_argument("-pat", "--patience", default=3, type=bool, help="Early stop patience count")
-  parser.add_argument("-delta", "--min-delta", default=0, type=bool, help="Early stop delta value")
+  parser.add_argument("-pat", "--patience", default=5, type=int, help="Early stop patience count")
+  parser.add_argument("-delta", "--min-delta", default=0, type=int, help="Early stop delta value")
   
   
   return parser

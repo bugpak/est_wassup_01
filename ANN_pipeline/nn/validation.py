@@ -15,9 +15,10 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from train import train, evaluate 
 from copy import deepcopy
 from nn.early_stop import EarlyStopper
+from nn.rmsle import RMSLELoss
 
 class Validation:
-  def __init__(self, X_trn, y_trn,patience,delta):
+  def __init__(self, X_trn, y_trn, patience, delta):
     self.patience = patience
     self.delta = delta
     self.X, self.y = 0,0 
@@ -33,10 +34,11 @@ class Validation:
     }
     return
   
-  def kfold(self, model, n_splits, shuffle=True, epochs=10, random_state=2023, device='cpu'):
+  def kfold(self, model, n_splits, shuffle=True, lr=0.001, epochs=100, batch=64, random_state=2023, device='cpu'):
+    print(batch)
     X_val, y_val = 0,0
     n_splits = n_splits
-
+    print(lr)
     skf = KFold(n_splits=n_splits, shuffle=shuffle, random_state=random_state)
 
     nets = [deepcopy(model).to(device) for i in range(n_splits)]
@@ -50,20 +52,19 @@ class Validation:
       ds_val = TensorDataset(X_val, y_val)
       # ds = CustomDataset(X, y)
       # ds_val = CustomDataset(X_val, y_val)
-      dl = DataLoader(ds, batch_size=64, shuffle=True)
+      dl = DataLoader(ds, batch, shuffle=True)
       dl_val = DataLoader(ds_val, batch_size=len(ds_val), shuffle=False)
-
+      print(dl)
       net = nets[i]
-      net.eval()
-      optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
+      optimizer = torch.optim.AdamW(net.parameters(), lr)
       
       pbar = range(epochs)
       pbar = tqdm(pbar)
       early_stopper = EarlyStopper(self.patience, self.delta)
       for j in pbar:
         accuracy = tf.keras.metrics.Accuracy()
-        loss = train(net, nn.functional.mse_loss, optimizer, dl, device)
-        loss_val = evaluate(net, nn.functional.mse_loss, dl_val, device, accuracy)
+        loss = train(net, RMSLELoss(), optimizer, dl, device)
+        loss_val = evaluate(net, RMSLELoss(), dl_val, device, accuracy)
         acc_val = accuracy.result().numpy()
         pbar.set_postfix(trn_loss=loss, val_loss=loss_val, val_acc=acc_val)
         if early_stopper.early_stop(loss_val):             

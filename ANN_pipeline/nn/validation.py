@@ -67,8 +67,8 @@ class Validation:
       early_stopper = EarlyStopper(self.patience, self.delta)
       for j in pbar:
         accuracy = tf.keras.metrics.Accuracy()
-        loss = train(net, RMSELoss(), optimizer, dl, device)
-        loss_val = evaluate(net, RMSELoss(), dl_val, device, accuracy)
+        loss = train(net, RMSLELoss(), optimizer, dl, device)
+        loss_val = evaluate(net, RMSLELoss(), dl_val, device, accuracy)
         scheduler.step(loss_val)
         acc_val = accuracy.result().numpy()
         pbar.set_postfix(trn_loss=loss, val_loss=loss_val, val_acc=acc_val)

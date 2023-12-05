@@ -99,7 +99,7 @@ def main(args):
   model = ANN(X_trn.shape[-1] ,args.hidden_dim).to(device)
   print(model)
   optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
-  scheduler = ReduceLROnPlateau(optimizer,'min',factor=0.5,patience=3,min_lr=0.000001)
+  scheduler = ReduceLROnPlateau(optimizer,'min',factor=0.7,patience=3,min_lr=0.00001)
 
   history = {
     'loss':[],
@@ -115,7 +115,7 @@ def main(args):
     print("Learning Start!")
     early_stopper = EarlyStopper(args.patience ,args.min_delta)
     for _ in pbar:
-      loss = train(model, RMSELoss(), optimizer, dl, device)
+      loss = train(model, RMSLELoss(), optimizer, dl, device)
       history['lr'].append(optimizer.param_groups[0]['lr'])
       scheduler.step(loss)
       history['loss'].append(loss)

@@ -13,17 +13,17 @@ def get_X(df_:pd.DataFrame, df_tst:pd.DataFrame, features:iter=None):
         df: DataFrame
         features: selected columns
     '''
-    """df.drop(df[(df['ECLO']==3)].index, inplace=True)
-        df.drop(df[(df['ECLO']==4)].index, inplace=True)
-        df.drop(df[(df['ECLO']==5)].index, inplace=True)
-        df.drop(df[(df['ECLO']==6)].index, inplace=True)"""
     df_ = deepcopy(df_)
     df_tst = deepcopy(df_tst)
+    """df.drop(df[(df['ECLO']==2)].index, inplace=True)
+    df.drop(df[(df['ECLO']==3)].index, inplace=True)
+    df.drop(df[(df['ECLO']==4)].index, inplace=True)
+    df.drop(df[(df['ECLO']==5)].index, inplace=True)"""
     preprosess =preprosess_Module(df_)
-    df_, df_tst = preprosess.preprocess(df_, df_tst)
+    df, df_tst = preprosess.preprocess(df_, df_tst)
     
     resample = Imbalance_Module()
-    df = resample.resample(df_)
+    df = resample.resample(df)
     print('resampling complete!\nshape:{} -> {}'.format(df_.shape, df.shape))
     df_tst.drop(['ID'], axis=1, inplace=True)
     df = df[df_tst.columns]
@@ -36,15 +36,16 @@ def get_y(df:pd.DataFrame, df_tst:pd.DataFrame):
     Args:
         df: DataFrame
     '''
-    """df.drop(df[(df['ECLO']==3)].index, inplace=True)
-        df.drop(df[(df['ECLO']==4)].index, inplace=True)
-        df.drop(df[(df['ECLO']==5)].index, inplace=True)
-        df.drop(df[(df['ECLO']==6)].index, inplace=True)"""
     df = deepcopy(df)
+    """df.drop(df[(df['ECLO']==2)].index, inplace=True)
+    df.drop(df[(df['ECLO']==3)].index, inplace=True)
+    df.drop(df[(df['ECLO']==4)].index, inplace=True)
+    df.drop(df[(df['ECLO']==5)].index, inplace=True)"""
     preprosess =preprosess_Module(df)
     df, df_tst = preprosess.preprocess(df, df_tst)
     resample = Imbalance_Module()
     df = resample.resample(df)
+    print('shape of data:',df.shape)
     df = df['ECLO']
     
     return df.to_numpy(dtype=np.float32)

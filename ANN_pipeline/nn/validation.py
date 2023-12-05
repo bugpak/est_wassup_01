@@ -15,7 +15,10 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from train import train, evaluate 
 from copy import deepcopy
 from nn.early_stop import EarlyStopper
-from nn.rmsle import RMSLELoss
+from nn.rmsle import RMSLELoss, RMSELoss
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+import warnings
+warnings.filterwarnings(action='ignore')
 
 class Validation:
   def __init__(self, X_trn, y_trn, patience, delta):
@@ -57,17 +60,19 @@ class Validation:
       print(dl)
       net = nets[i]
       optimizer = torch.optim.AdamW(net.parameters(), lr)
+      scheduler = ReduceLROnPlateau(optimizer,'min',factor=0.8,patience=3,min_lr=0.000001)
       
       pbar = range(epochs)
       pbar = tqdm(pbar)
       early_stopper = EarlyStopper(self.patience, self.delta)
       for j in pbar:
         accuracy = tf.keras.metrics.Accuracy()
-        loss = train(net, RMSLELoss(), optimizer, dl, device)
-        loss_val = evaluate(net, RMSLELoss(), dl_val, device, accuracy)
+        loss = train(net, RMSELoss(), optimizer, dl, device)
+        loss_val = evaluate(net, RMSELoss(), dl_val, device, accuracy)
+        scheduler.step(loss_val)
         acc_val = accuracy.result().numpy()
         pbar.set_postfix(trn_loss=loss, val_loss=loss_val, val_acc=acc_val)
-        if early_stopper.early_stop(loss_val):             
+        if early_stopper.early_stop(net,validation_loss=loss_val, mode=False):             
           break
       net = nets[i].to(device)
       self.pred = net(self.X)

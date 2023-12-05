@@ -27,7 +27,7 @@ def get_X(df_:pd.DataFrame, df_tst:pd.DataFrame, features:iter=None):
     print('resampling complete!\nshape:{} -> {}'.format(df_.shape, df.shape))
     df_tst.drop(['ID'], axis=1, inplace=True)
     df = df[df_tst.columns]
-    print('shape of data:',df.shape)
+    print('shape of data:',df_.shape)
     return df.to_numpy(dtype=np.float32), df_tst.to_numpy(dtype=np.float32)
 
 def get_y(df:pd.DataFrame, df_tst:pd.DataFrame):

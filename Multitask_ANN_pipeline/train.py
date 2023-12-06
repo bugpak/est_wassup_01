@@ -20,7 +20,6 @@ from metric.graph import get_graph
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
-#print(device)
 
 def train(
   model:nn.Module,
@@ -89,20 +88,13 @@ def main(args):
   device = torch.device(train_params.get("device"))
   model_params = args.get("model_params")
 
-  # device = torch.device(args.device)
-
-  # submission_df = pd.read_csv(args.data_submission)
   submission_df = pd.read_csv(files_.get("data_submission"))
-
-
   train_df = pd.read_csv(files_.get("data_train"))
   test_df = pd.read_csv(files_.get("data_test"))
   X_trn, X_val = get_X(train_df,test_df)
   y_trn = get_y(train_df,test_df)
-  #y_trn = get_y(train_df,test_df)[:,np.newaxis]
   ds = CustomDataset(X_trn.astype(np.float32), y_trn.astype(np.float32))
   ds_val = CustomDataset(X_val.astype(np.float32))
-  # dl = DataLoader(ds, batch_size=args.batch_size, shuffle=args.shuffle)
 
   dl_params = train_params.get("data_loader_params")
   dl = DataLoader(ds, batch_size=dl_params.get("batch_size"), shuffle=dl_params.get("shuffle"))
@@ -169,33 +161,6 @@ def main(args):
     
   return
 
-
-# def get_args_parser(add_help=True):
-
-#   parser = argparse.ArgumentParser(description="PyTorch Classification Training", add_help=add_help)
-
-#   parser.add_argument("--data-submission", default="/home/estsoft/data/sample_submission.csv", type=str, help="submission dataset path") #files
-#   parser.add_argument("--data-train", default="/home/estsoft/data/train.csv", type=str, help="train dataset path") # files
-#   parser.add_argument("--data-test", default="/home/estsoft/data/test.csv", type=str, help="test dataset path") #files
-#   parser.add_argument("--hidden-dim", default=64, type=int, help="dimension of hidden layer") # layer 자체를 바꾸기
-#   parser.add_argument("--device", default="cuda", type=str, help="device (Use cpu/cuda/mps)") #train_params
-#   parser.add_argument("-b", "--batch-size", default=64, type=int, help="batch size") #train_params - data_loader_params
-#   parser.add_argument("--shuffle", default=True, type=bool, help="shuffle") #train_params - data_loader_params
-#   parser.add_argument("--epochs", default=100, type=int, metavar="N", help="number of total epochs to run")
-#   parser.add_argument("--lr", default=0.001, type=float, help="learning rate") #train_params - optim_params
-#   parser.add_argument("--pbar", default=True, type=bool, help="progress bar") #train_params
-#   parser.add_argument("-o", "--output", default="./submit/model_", type=str, help="path to save output model") #files
-#   parser.add_argument("-sub", "--submission", default="./submit/submission_", type=str, help="path to save submission")
-#   parser.add_argument("-train", "--train", default=False, type=bool, help="full data set train")
-#   parser.add_argument("-val", "--validation", default=False, type=bool, help="kfold cross validation train")
-#   parser.add_argument("-pat", "--patience", default=5, type=int, help="Early stop patience count")
-#   parser.add_argument("-delta", "--min-delta", default=0, type=int, help="Early stop delta value")
-#   parser.add_argument("-name", "--name", default="", type=str, help="model name for Outputs")
-  
-  
-#   return parser
-
-
 def get_args_parser(add_help=True):
     import argparse
 
@@ -206,17 +171,8 @@ def get_args_parser(add_help=True):
 
     return parser
 
-
-
-
 if __name__ == "__main__":
-  # args = get_args_parser().parse_args()
-  # main(args)
-
   args = get_args_parser().parse_args()
-  print('args start on train')
-  print(args)
-  print('args end on train')
 
   exec(open(args.config).read())
   main(config)

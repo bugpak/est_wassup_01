@@ -19,6 +19,7 @@ from nn.rmsle import RMSLELoss, RMSELoss
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import warnings
 warnings.filterwarnings(action='ignore')
+from nn.weighted_metric import weighted_metric
 
 class Validation:
   def __init__(self, X_trn, y_trn, patience, delta):
@@ -32,7 +33,7 @@ class Validation:
     'MSE':[],
     'RMSE':[],
     'MAE':[],
-    'RMSLE':[],
+    #'RMSLE':[],
     'ACCURACY':[]
     }
     return
@@ -83,16 +84,31 @@ class Validation:
   def loss_functoin(self):
     #self.y = [int(i) for i in self.y.detach().numpy()]
     #self.pred = [int(i) for i in self.pred.detach().numpy()]
-    MSE = mean_squared_error(self.y.detach().numpy(), self.pred.detach().numpy())
-    RMSE = mean_squared_error(self.y.detach().numpy(), self.pred.detach().numpy(), squared=False)
-    MAE = mean_absolute_error(self.y.detach().numpy(), self.pred.detach().numpy())
-    RMSLE = mean_squared_log_error(self.y.detach().numpy(), self.pred.detach().numpy(), squared=False)
-    ACCURACY = accuracy_score(self.y.detach().numpy(), self.pred.detach().numpy())
-    self.scores['MSE'].append(np.sqrt(MSE))
-    self.scores['RMSE'].append(np.sqrt(RMSE))
-    self.scores['MAE'].append(np.sqrt(MAE))
-    self.scores['RMSLE'].append(np.sqrt(RMSLE))
+    # MSE = mean_squared_error(self.y.detach().numpy(), self.pred.detach().numpy())
+    # RMSE = mean_squared_error(self.y.detach().numpy(), self.pred.detach().numpy(), squared=False)
+    # MAE = mean_absolute_error(self.y.detach().numpy(), self.pred.detach().numpy())
+    # RMSLE = mean_squared_log_error(self.y.detach().numpy(), self.pred.detach().numpy(), squared=False)
+    # ACCURACY = accuracy_score(self.y.detach().numpy(), self.pred.detach().numpy())
+    # self.scores['MSE'].append(np.sqrt(MSE))
+    # self.scores['RMSE'].append(np.sqrt(RMSE))
+    # self.scores['MAE'].append(np.sqrt(MAE))
+    # self.scores['RMSLE'].append(np.sqrt(RMSLE))
+    # self.scores['ACCURACY'].append(ACCURACY)
+
+    y_true = self.y.detach().numpy()
+    y_pred = self.pred.detach().numpy()
+
+    MSE = weighted_metric(mean_squared_error, y_true, y_pred)
+    RMSE = weighted_metric(lambda a,b: mean_squared_error(a,b,squared=False), y_true, y_pred)
+    MAE = weighted_metric(mean_absolute_error, y_true, y_pred)
+    ACCURACY = weighted_metric(accuracy_score, y_true, y_pred)/4
+
+    self.scores['MSE'].append(MSE)
+    self.scores['RMSE'].append(RMSE)
+    self.scores['MAE'].append(MAE)
     self.scores['ACCURACY'].append(ACCURACY)
+
+    #RMSLE는 RMSE에 별도로 로그를 씌워주는 함수를 별도로 설정하고, 돌려야 한다.
     
     return 
   

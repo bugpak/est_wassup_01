@@ -110,7 +110,6 @@ def main(args):
 
   model = ANN(X_trn.shape[-1] ,model_params.get("hidden_dim")).to(device)
   print(model)
-
   opt_params = train_params.get("optim_params")
   optimizer = torch.optim.AdamW(model.parameters(), lr=opt_params.get("lr"))
   scheduler = ReduceLROnPlateau(optimizer,'min',factor=0.7,patience=3,min_lr=0.000001)
@@ -129,7 +128,7 @@ def main(args):
     print("Learning Start!")
     early_stopper = EarlyStopper(train_params.get("patience") ,train_params.get("min_delta"))
     for _ in pbar:
-      loss = train(model, RMSELoss(), optimizer, dl, device)
+      loss = train(model, RMSLELoss(), optimizer, dl, device)
       history['lr'].append(optimizer.param_groups[0]['lr'])
       scheduler.step(loss)
       history['loss'].append(loss)
@@ -142,8 +141,6 @@ def main(args):
     print("Done!")
     torch.save(model.state_dict(), files_.get("output")+files_.get("name")+'.pth')
     
-
-
     model = ANN(X_trn.shape[-1] ,model_params.get("hidden_dim")).to(device)
     if torch.load(files_.get("output")+files_.get("name")+'_earlystop.pth'):
       model.load_state_dict(torch.load(files_.get("output")+files_.get("name")+'_earlystop.pth'))

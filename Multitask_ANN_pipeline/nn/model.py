@@ -18,7 +18,7 @@ class ANN(nn.Module):
   def __init__(self, input:int=5, hidden:int=64):
     super().__init__()
     self.linear_stack = nn.Sequential(
-        nn.Linear(input,hidden),     #(13,64)
+        nn.Linear(input,hidden),     #(13,64)       (13, 32)
         nn.ReLU(),
         nn.Dropout(0.3),
         nn.Linear(hidden,hidden*2),  #(64,128)

@@ -64,7 +64,7 @@ class Validation:
         accuracy = tf.keras.metrics.Accuracy()
         loss = train(net, RMSELoss(), optimizer, dl, device)
         loss_val = evaluate(net, RMSELoss(), dl_val, device, accuracy)
-        #scheduler.step(loss)
+        scheduler.step(loss)
         acc_val = accuracy.result().numpy()
         pbar.set_postfix(trn_loss=loss, val_loss=loss_val, val_acc=acc_val)
         if early_stopper.early_stop(net,validation_loss=loss, mode=False):             

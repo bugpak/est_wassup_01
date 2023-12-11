@@ -13,7 +13,7 @@ from nn.early_stop import EarlyStopper
 from nn.rmsle import RMSLELoss, RMSELoss
 from datasets.dataset import get_X, get_y
 from metric.graph import get_graph
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingWarmRestarts
 import os
 import glob
 
@@ -102,7 +102,8 @@ def main(args):
   print(model)
   opt_params = train_params.get("optim_params")
   optimizer = torch.optim.AdamW(model.parameters(), lr=opt_params.get("lr"))
-  scheduler = ReduceLROnPlateau(optimizer,'min',factor=0.7,patience=3,min_lr=0.000001)
+  #scheduler = ReduceLROnPlateau(optimizer,'min',factor=0.8,patience=3,min_lr=0.000001)
+  scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=20, T_mult=1, eta_min=0.00001)
 
   history = {
     'loss':[],
@@ -118,9 +119,9 @@ def main(args):
     print("Learning Start!")
     early_stopper = EarlyStopper(train_params.get("patience") ,train_params.get("min_delta"))
     for _ in pbar:
-      loss = train(model, RMSLELoss(), optimizer, dl, device)
+      loss = train(model, RMSELoss(), optimizer, dl, device)
       history['lr'].append(optimizer.param_groups[0]['lr'])
-      scheduler.step(loss)
+      #scheduler.step(loss)
       history['loss'].append(loss)
       pbar.set_postfix(trn_loss=loss)
       if early_stopper.early_stop(model, loss, files_.get("output")+files_.get("name")+'_earlystop.pth'):

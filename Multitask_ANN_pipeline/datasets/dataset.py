@@ -22,12 +22,12 @@ def get_X(df_:pd.DataFrame, df_tst:pd.DataFrame, features:iter=None):
     preprosess =preprosess_Module(df_)
     df, df_tst = preprosess.preprocess(df_, df_tst)
     
-    #resample = Imbalance_Module()
-    #df = resample.resample(df)
+    resample = Imbalance_Module()
+    df = resample.resample(df)
     print('resampling complete!\nshape:{} -> {}'.format(df_.shape, df.shape))
     df_tst.drop(['ID'], axis=1, inplace=True)
     df = df[df_tst.columns]
-    print('shape of data:',df_.shape)
+    print('shape of data:',df.shape)
     return df.to_numpy(dtype=np.float32), df_tst.to_numpy(dtype=np.float32)
 
 def get_y(df:pd.DataFrame, df_tst:pd.DataFrame):
@@ -43,8 +43,8 @@ def get_y(df:pd.DataFrame, df_tst:pd.DataFrame):
     df.drop(df[(df['ECLO']==5)].index, inplace=True)"""
     preprosess =preprosess_Module(df)
     df, df_tst = preprosess.preprocess(df, df_tst)
-    #resample = Imbalance_Module()
-    #df = resample.resample(df)
+    resample = Imbalance_Module()
+    df = resample.resample(df)
     print('shape of data:',df.shape)
     df = df[['사망자수', '중상자수', '경상자수', '부상자수']]
     return df.to_numpy(dtype=np.float32)

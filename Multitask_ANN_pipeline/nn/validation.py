@@ -10,7 +10,7 @@ from train import train, evaluate
 from copy import deepcopy
 from nn.early_stop import EarlyStopper
 from nn.rmsle import RMSLELoss, RMSELoss
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingWarmRestarts
 import warnings
 warnings.filterwarnings(action='ignore')
 from nn.weighted_metric import weighted_metric
@@ -26,6 +26,7 @@ class Validation:
     self.scores={
     'MSE':[],
     'RMSE':[],
+    'RMSLE':[],
     'MAE':[],
     'R2SCORE':[]
     }
@@ -52,7 +53,9 @@ class Validation:
       net.to(device)
       
       optimizer = torch.optim.AdamW(net.parameters(), lr)
-      scheduler = ReduceLROnPlateau(optimizer,'min',factor=0.8,patience=3,min_lr=0.000001)
+      #scheduler = ReduceLROnPlateau(optimizer,'min',factor=0.8,patience=3,min_lr=0.000001)
+      scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=20, T_mult=1, eta_min=0.00001)
+
       
       pbar = range(epochs)
       pbar = tqdm(pbar)
@@ -61,14 +64,14 @@ class Validation:
         accuracy = tf.keras.metrics.Accuracy()
         loss = train(net, RMSELoss(), optimizer, dl, device)
         loss_val = evaluate(net, RMSELoss(), dl_val, device, accuracy)
-        scheduler.step(loss_val)
+        #scheduler.step(loss)
         acc_val = accuracy.result().numpy()
         pbar.set_postfix(trn_loss=loss, val_loss=loss_val, val_acc=acc_val)
-        if early_stopper.early_stop(net,validation_loss=loss_val, mode=False):             
+        if early_stopper.early_stop(net,validation_loss=loss, mode=False):             
           break
 
       self.pred = net(self.X)
-      self.pred = torch.round(self.pred)
+      #self.pred = torch.round(self.pred)
       self.metric()
       del net
       
@@ -80,11 +83,13 @@ class Validation:
 
     MSE = weighted_metric(mean_squared_error, y_true, y_pred)
     RMSE = weighted_metric(lambda a,b: mean_squared_error(a,b,squared=False), y_true, y_pred)
+    RMSLE = weighted_metric(lambda a,b: mean_squared_log_error(a,b,squared=False), y_true, y_pred)
     MAE = weighted_metric(mean_absolute_error, y_true, y_pred)
     R2SCORE = weighted_metric(r2_score, y_true, y_pred)
 
     self.scores['MSE'].append(MSE)
     self.scores['RMSE'].append(RMSE)
+    self.scores['RMSLE'].append(RMSLE)
     self.scores['MAE'].append(MAE)
     self.scores['R2SCORE'].append(R2SCORE)
     

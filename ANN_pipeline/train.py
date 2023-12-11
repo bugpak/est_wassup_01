@@ -17,7 +17,7 @@ from nn.early_stop import EarlyStopper
 from nn.rmsle import RMSLELoss, RMSELoss
 from datasets.dataset import get_X, get_y
 from metric.graph import get_graph
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingWarmRestarts
 
 device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
 #print(device)
@@ -99,7 +99,8 @@ def main(args):
   model = ANN(X_trn.shape[-1] ,args.hidden_dim).to(device)
   print(model)
   optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
-  scheduler = ReduceLROnPlateau(optimizer,'min',factor=0.7,patience=3,min_lr=0.00001)
+  #scheduler = ReduceLROnPlateau(optimizer,'min',factor=0.7,patience=3,min_lr=0.00001)
+  scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=20, T_mult=1, eta_min=0.00001)
 
   history = {
     'loss':[],
@@ -118,7 +119,7 @@ def main(args):
       loss = train(model, RMSELoss(), optimizer, dl, device)
       history['lr'].append(optimizer.param_groups[0]['lr'])
       scheduler.step(loss)
-      history['loss'].append(loss)
+      history['loss'].append(loss) 
       pbar.set_postfix(trn_loss=loss)
       if early_stopper.early_stop(model, loss, args.output+args.name+'_earlystop.pth'):
         print('Early Stopper run!')            
@@ -162,18 +163,18 @@ def get_args_parser(add_help=True):
   parser.add_argument("--data-submission", default="/home/estsoft/data/sample_submission.csv", type=str, help="submission dataset path")
   parser.add_argument("--data-train", default="/home/estsoft/data/train.csv", type=str, help="train dataset path")
   parser.add_argument("--data-test", default="/home/estsoft/data/test.csv", type=str, help="test dataset path")
-  parser.add_argument("--hidden-dim", default=64, type=int, help="dimension of hidden layer")
+  parser.add_argument("--hidden-dim", default=32, type=int, help="dimension of hidden layer")
   parser.add_argument("--device", default="cuda", type=str, help="device (Use cpu/cuda/mps)")
   parser.add_argument("-b", "--batch-size", default=64, type=int, help="batch size")
   parser.add_argument("--shuffle", default=True, type=bool, help="shuffle")
-  parser.add_argument("--epochs", default=100, type=int, metavar="N", help="number of total epochs to run")
+  parser.add_argument("--epochs", default=200, type=int, metavar="N", help="number of total epochs to run")
   parser.add_argument("--lr", default=0.001, type=float, help="learning rate")
   parser.add_argument("--pbar", default=True, type=bool, help="progress bar")
   parser.add_argument("-o", "--output", default="./submit/model_", type=str, help="path to save output model")
   parser.add_argument("-sub", "--submission", default="./submit/submission_", type=str, help="path to save submission")
   parser.add_argument("-train", "--train", default=False, type=bool, help="full data set train")
   parser.add_argument("-val", "--validation", default=False, type=bool, help="kfold cross validation train")
-  parser.add_argument("-pat", "--patience", default=5, type=int, help="Early stop patience count")
+  parser.add_argument("-pat", "--patience", default=100, type=int, help="Early stop patience count")
   parser.add_argument("-delta", "--min-delta", default=0, type=int, help="Early stop delta value")
   parser.add_argument("-name", "--name", default="", type=str, help="model name for Outputs")
   

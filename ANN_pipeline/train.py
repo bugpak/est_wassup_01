@@ -115,7 +115,7 @@ def main(args):
     print("Learning Start!")
     early_stopper = EarlyStopper(args.patience ,args.min_delta)
     for _ in pbar:
-      loss = train(model, RMSLELoss(), optimizer, dl, device)
+      loss = train(model, RMSELoss(), optimizer, dl, device)
       history['lr'].append(optimizer.param_groups[0]['lr'])
       scheduler.step(loss)
       history['loss'].append(loss)

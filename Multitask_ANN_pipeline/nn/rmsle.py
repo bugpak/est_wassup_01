@@ -20,9 +20,9 @@ class RMSELoss(torch.nn.Module):
     def forward(self,x,y):
         criterion = nn.MSELoss()
         #print('1',x[:,0], y)
-        loss = (torch.sqrt(criterion(x[:,0], y[:,0]))+
+        loss = (torch.sqrt(criterion(x[:,0], y[:,0]))*10+
                 torch.sqrt(criterion(x[:,1], y[:,1]))*5+
-                torch.sqrt(criterion(x[:,2], y[:,2]))*10+
+                torch.sqrt(criterion(x[:,2], y[:,2]))*3+
                 torch.sqrt(criterion(x[:,3], y[:,3])))
         
         return loss

@@ -71,6 +71,7 @@ class Validation:
       self.pred = torch.round(self.pred)
       self.metric()
       del net
+      
     return self.scores
   
   def metric(self):

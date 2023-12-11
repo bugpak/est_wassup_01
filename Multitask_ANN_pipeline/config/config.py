@@ -1,8 +1,3 @@
-import torch
-import torch.nn.functional as F
-import torchmetrics
-from torchmetrics.regression import MeanSquaredLogError
-# from nn import ANN, RMSLELoss
 
 config = {
     "files": {
@@ -11,10 +6,10 @@ config = {
         "data_test":"/home/estsoft/data/test.csv",
         "output": "./submit/model_",
         "submission":"./submit/submission_",
-        "name": ""
+        "name": "3hidden_dim32_notdrop_0.001_rsme"
     },
     "model_params": {
-        "hidden_dim": 64,
+        "hidden_dim": 32,
         "use_dropout": True,
     },
     "train_params": {
@@ -24,11 +19,11 @@ config = {
         },
         "optim_params": {"lr": 0.001, },
         "device": "cuda",
-        "epochs": 5,
+        "epochs": 1000,
         "pbar": True,
         "min_delta": 0,
-        "patience": 5,
+        "patience": 10,
     },
-    "train": True,
+    "train": False,
     "validation": True,
 }

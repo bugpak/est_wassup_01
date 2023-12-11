@@ -21,7 +21,7 @@ class ANN(nn.Module):
         #nn.Dropout(0.3),
         nn.Linear(hidden*2,hidden*4), #(128,256)
         nn.ReLU(),
-        #nn.Dropout(0.3),     
+        #nn.Dropout(0.3),    
         nn.Linear(hidden*4,hidden*4),
         nn.ReLU(),
         #nn.Dropout(0.3),

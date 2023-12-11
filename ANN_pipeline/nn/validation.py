@@ -1,14 +1,8 @@
-import numpy as np
-import pandas as pd
 import torch
-from nn.model import ANN
-from nn.utils import CustomDataset
-from sklearn.model_selection import StratifiedKFold, KFold
+from sklearn.model_selection import KFold
 from torch.utils.data import TensorDataset, DataLoader
-from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_squared_log_error
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_squared_log_error, r2_score
 import tensorflow as tf
-from torch import nn
 from tqdm.auto import tqdm
 import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -16,9 +10,10 @@ from train import train, evaluate
 from copy import deepcopy
 from nn.early_stop import EarlyStopper
 from nn.rmsle import RMSLELoss, RMSELoss
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingWarmRestarts
 import warnings
 warnings.filterwarnings(action='ignore')
+from nn.weighted_metric import weighted_metric
 
 class Validation:
   def __init__(self, X_trn, y_trn, patience, delta):
@@ -31,21 +26,17 @@ class Validation:
     self.scores={
     'MSE':[],
     'RMSE':[],
-    'MAE':[],
     'RMSLE':[],
-    'ACCURACY':[]
+    'MAE':[],
+    'R2SCORE':[]
     }
     return
   
   def kfold(self, model, n_splits, shuffle=True, lr=0.001, epochs=100, batch=64, random_state=2023, device='cpu'):
-    print(batch)
     X_val, y_val = 0,0
     n_splits = n_splits
-    print(lr)
-    skf = KFold(n_splits=n_splits, shuffle=shuffle, random_state=random_state)
 
-    nets = [deepcopy(model).to(device) for i in range(n_splits)]
-    #history = []
+    skf = KFold(n_splits=n_splits, shuffle=shuffle, random_state=random_state)
 
     for i, (trn_idx, val_idx) in enumerate(skf.split(self.X_trn, self.y_trn)):
       self.X, self.y = torch.tensor(self.X_trn[trn_idx]), torch.tensor(self.y_trn[trn_idx])
@@ -57,10 +48,14 @@ class Validation:
       # ds_val = CustomDataset(X_val, y_val)
       dl = DataLoader(ds, batch, shuffle=True)
       dl_val = DataLoader(ds_val, batch_size=len(ds_val), shuffle=False)
-      print(dl)
-      net = nets[i]
+      
+      net = deepcopy(model)
+      net.to(device)
+      
       optimizer = torch.optim.AdamW(net.parameters(), lr)
-      scheduler = ReduceLROnPlateau(optimizer,'min',factor=0.8,patience=3,min_lr=0.000001)
+      #scheduler = ReduceLROnPlateau(optimizer,'min',factor=0.8,patience=3,min_lr=0.000001)
+      scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=20, T_mult=1, eta_min=0.00001)
+
       
       pbar = range(epochs)
       pbar = tqdm(pbar)
@@ -69,31 +64,34 @@ class Validation:
         accuracy = tf.keras.metrics.Accuracy()
         loss = train(net, RMSELoss(), optimizer, dl, device)
         loss_val = evaluate(net, RMSELoss(), dl_val, device, accuracy)
-        scheduler.step(loss_val)
+        scheduler.step(loss)
         acc_val = accuracy.result().numpy()
         pbar.set_postfix(trn_loss=loss, val_loss=loss_val, val_acc=acc_val)
-        if early_stopper.early_stop(net,validation_loss=loss_val, mode=False):             
+        if early_stopper.early_stop(net,validation_loss=loss, mode=False):             
           break
-      net = nets[i].to(device)
+
       self.pred = net(self.X)
-      self.pred = torch.round(self.pred)
-      self.loss_functoin()
+      #self.pred = torch.round(self.pred)
+      self.metric()
+      del net
       
     return self.scores
   
-  def loss_functoin(self):
-    self.y = [int(i) for i in self.y.detach().numpy()]
-    self.pred = [int(i) for i in self.pred.detach().numpy()]
-    MSE = mean_squared_error(self.y, self.pred)
-    RMSE = mean_squared_error(self.y, self.pred, squared=False)
-    MAE = mean_absolute_error(self.y, self.pred)
-    RMSLE = mean_squared_log_error(self.y, self.pred, squared=False)
-    ACCURACY = accuracy_score(self.y, self.pred)
-    self.scores['MSE'].append(np.sqrt(MSE))
-    self.scores['RMSE'].append(np.sqrt(RMSE))
-    self.scores['MAE'].append(np.sqrt(MAE))
-    self.scores['RMSLE'].append(np.sqrt(RMSLE))
-    self.scores['ACCURACY'].append(ACCURACY)
+  def metric(self):
+    y_true = self.y.detach().numpy()
+    y_pred = self.pred.detach().numpy()
+
+    MSE = mean_squared_error(y_true, y_pred)
+    RMSE = mean_squared_error(y_true, y_pred,squared=False)
+    RMSLE = mean_squared_log_error(y_true, y_pred,squared=False)
+    MAE = mean_absolute_error(y_true, y_pred)
+    R2SCORE = r2_score(y_true, y_pred)
+
+    self.scores['MSE'].append(MSE)
+    self.scores['RMSE'].append(RMSE)
+    self.scores['RMSLE'].append(RMSLE)
+    self.scores['MAE'].append(MAE)
+    self.scores['R2SCORE'].append(R2SCORE)
     
     return 
   

@@ -54,7 +54,7 @@ class preprosess_Module:
         df_cat = pd.merge(df_cat, ex_df, how='left', on=['도시', '구', '동'])
         df_cat_tst = pd.merge(df_cat_tst, ex_df, how='left', on=['도시', '구', '동'])
         df_cat.to_csv('data.csv')
-        encoder = Encoder_Module()
+        encoder = Encoder_Module(df['ECLO'])
         df_cat = encoder.encoder(df_cat)
         df_cat_tst = encoder.encoder(df_cat_tst)
 

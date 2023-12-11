@@ -1,23 +1,21 @@
-import torch
 from torch import nn
 from torch.utils.data import DataLoader
 import torchmetrics
 from typing import Optional
 import numpy as np
 import pandas as pd
-from datasets.preprocess import preprosess_Module
 from nn.model import ANN
 from nn.utils import CustomDataset
 from tqdm.auto import tqdm
-import argparse
 from nn.validation import *
-from tqdm.auto import tqdm
-from torch.utils.data import TensorDataset 
+from tqdm.auto import tqdm 
 from nn.early_stop import EarlyStopper
 from nn.rmsle import RMSLELoss, RMSELoss
 from datasets.dataset import get_X, get_y
 from metric.graph import get_graph
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+import os
+import glob
 
 device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
 
@@ -156,7 +154,7 @@ def main(args):
     model = ANN(X_trn.shape[-1] ,model_params.get("hidden_dim")).to(device)
     scores = Validation(X_trn, y_trn, train_params.get("patience"), train_params.get("min_delta"))
     scores = pd.DataFrame(scores.kfold(model, n_splits=5, epochs=train_params.get("epochs"), lr=opt_params.get("lr"), 
-                                       batch=dl_params.get("batch_size"), shuffle=True, random_state=2023))
+                                      batch=dl_params.get("batch_size"), shuffle=True, random_state=2023))
     print(pd.concat([scores, scores.apply(['mean', 'std'])]))
     
   return
@@ -166,14 +164,22 @@ def get_args_parser(add_help=True):
 
     parser = argparse.ArgumentParser(description="Pytorch K-fold Cross Validation", add_help=add_help)
     parser.add_argument(
-        "-c", "--config", default="./config.py", type=str, help="configuration file"
+        "-c", "--config", default="./config/config.py", type=str, help="configuration file"
+    )
+    parser.add_argument(
+        "-mode", "--multi-mode", default=False, type=bool, help="multi train mode"
     )
 
     return parser
 
 if __name__ == "__main__":
   args = get_args_parser().parse_args()
-
+  print(args.config)
   exec(open(args.config).read())
   main(config)
-
+  
+  if args.multi_mode:
+    for filename in glob.glob("config/multi*.py"):
+      print(filename)
+      exec(open('./'+filename).read())
+      main(config)

@@ -121,7 +121,7 @@ def main(args):
     for _ in pbar:
       loss = train(model, RMSELoss(), optimizer, dl, device)
       history['lr'].append(optimizer.param_groups[0]['lr'])
-      #scheduler.step(loss)
+      scheduler.step(loss)
       history['loss'].append(loss)
       pbar.set_postfix(trn_loss=loss)
       if early_stopper.early_stop(model, loss, files_.get("output")+files_.get("name")+'_earlystop.pth'):

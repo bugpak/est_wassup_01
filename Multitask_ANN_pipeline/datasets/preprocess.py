@@ -50,9 +50,9 @@ class preprosess_Module:
         df_cat_tst[['도로형태1', '도로형태2']] = df_cat_tst['도로형태'].str.extract(road_pattern)
         df_cat_tst = df_cat_tst.drop(columns=['도로형태'])
         
-        #ex_df = external_data()
-        #df_cat = pd.merge(df_cat, ex_df, how='left', on=['도시', '구', '동'])
-        #df_cat_tst = pd.merge(df_cat_tst, ex_df, how='left', on=['도시', '구', '동'])
+        ex_df = external_data()
+        df_cat = pd.merge(df_cat, ex_df, how='left', on=['도시', '구', '동'])
+        df_cat_tst = pd.merge(df_cat_tst, ex_df, how='left', on=['도시', '구', '동'])
         df_cat.to_csv('data.csv')
         encoder = Encoder_Module()
         df_cat = encoder.encoder(df_cat)

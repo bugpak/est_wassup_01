@@ -4,8 +4,8 @@ config = {
         "data_submission": "../data/sample_submission.csv",
         "data_train": "../data/train.csv",
         "data_test":"../data/test.csv",
-        "output": "../submit/model_",
-        "submission":"../submit/submission_",
+        "output": "./submit/model_",
+        "submission":"./submit/submission_",
         "name": "hidden_dim32_notdrop_nonexternal_0.001_rsme_epoch1000_early200"
     },
     "model_params": {

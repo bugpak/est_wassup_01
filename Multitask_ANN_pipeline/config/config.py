@@ -18,7 +18,7 @@ config = {
             "shuffle": True,
         },
         "optim_params": {"lr": 0.001, }, 
-        "device": "cpu",
+        "device": "cuda",
         "epochs": 1000,
         "pbar": True,
         "min_delta": 0,

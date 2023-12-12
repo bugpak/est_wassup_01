@@ -1,9 +1,4 @@
-import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
-from sklearn.base import BaseEstimator
-from tqdm.auto import tqdm
-from nn.utils import CustomDataset
 
 class ANN(nn.Module):
   '''

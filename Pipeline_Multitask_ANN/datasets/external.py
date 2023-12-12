@@ -1,9 +1,9 @@
 import pandas as pd
 
 def external_data():
-    light_df = pd.read_csv('../data/대구 보안등 정보.csv', encoding='cp949')[['설치개수', '소재지지번주소']]
-    child_area_df = pd.read_csv('../data/대구 어린이 보호 구역 정보.csv', encoding='cp949').drop_duplicates()[['소재지지번주소']]
-    parking_df = pd.read_csv('../data/대구 주차장 정보.csv', encoding='cp949')[['소재지지번주소', '급지구분']]
+    light_df = pd.read_csv('../data/external/대구 보안등 정보.csv', encoding='cp949')[['설치개수', '소재지지번주소']]
+    child_area_df = pd.read_csv('../data/external/대구 어린이 보호 구역 정보.csv', encoding='cp949').drop_duplicates()[['소재지지번주소']]
+    parking_df = pd.read_csv('../data/external/대구 주차장 정보.csv', encoding='cp949')[['소재지지번주소', '급지구분']]
     
     child_area_df['cnt'] = 1
     parking_df = pd.get_dummies(parking_df, columns=['급지구분'])

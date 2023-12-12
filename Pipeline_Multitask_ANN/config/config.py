@@ -22,7 +22,7 @@ config = {
         "epochs": 1500,
         "pbar": True,
         "min_delta": 0,
-        "patience": 200,
+        "patience": 150,
     },
     "train": True,
     "validation": True,

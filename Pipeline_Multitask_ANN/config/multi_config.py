@@ -1,12 +1,12 @@
 
 config = {
     "files": {
-        "data_submission": "/home/estsoft/data/sample_submission.csv",
-        "data_train": "/home/estsoft/data/train.csv",
-        "data_test":"/home/estsoft/data/test.csv",
+        "data_submission": "../data/sample_submission.csv",
+        "data_train": "../data/train.csv",
+        "data_test":"../data/test.csv",
         "output": "./submit/model_",
         "submission":"./submit/submission_",
-        "name": "3hidden_dim32_notdrop_notschedul_0.001_rsme_epoch1200"
+        "name": "hidden_dim32_notdrop_notschedul_0.001_rsme_epoch400"
     },
     "model_params": {
         "hidden_dim": 32,

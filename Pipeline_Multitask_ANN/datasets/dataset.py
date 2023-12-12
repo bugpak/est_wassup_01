@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler, MaxAbsScaler, MinMaxScaler, RobustScaler
-from .imbalance import Imbalance_Module
+from .resample import Imbalance_Module
 from .preprocess import preprosess_Module
 from .encoder import Encoder_Module
 from copy import deepcopy
@@ -15,10 +15,6 @@ def get_X(df_:pd.DataFrame, df_tst:pd.DataFrame, features:iter=None):
     '''
     df_ = deepcopy(df_)
     df_tst = deepcopy(df_tst)
-    """df.drop(df[(df['ECLO']==2)].index, inplace=True)
-    df.drop(df[(df['ECLO']==3)].index, inplace=True)
-    df.drop(df[(df['ECLO']==4)].index, inplace=True)
-    df.drop(df[(df['ECLO']==5)].index, inplace=True)"""
     preprosess =preprosess_Module(df_)
     df, df_tst = preprosess.preprocess(df_, df_tst)
     
@@ -37,10 +33,6 @@ def get_y(df:pd.DataFrame, df_tst:pd.DataFrame):
         df: DataFrame
     '''
     df = deepcopy(df)
-    """df.drop(df[(df['ECLO']==2)].index, inplace=True)
-    df.drop(df[(df['ECLO']==3)].index, inplace=True)
-    df.drop(df[(df['ECLO']==4)].index, inplace=True)
-    df.drop(df[(df['ECLO']==5)].index, inplace=True)"""
     preprosess =preprosess_Module(df)
     df, df_tst = preprosess.preprocess(df, df_tst)
     resample = Imbalance_Module()

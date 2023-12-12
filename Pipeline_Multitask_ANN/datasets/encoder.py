@@ -8,7 +8,7 @@ class Encoder_Module:
     def __init__(self,y:pd.DataFrame=None):
         self.label = LabelEncoder()
         self.onehot = OneHotEncoder()
-        #self.target = TargetEncoder()
+        self.target = TargetEncoder()
         self.y = y
         
     def encoder(self, df:pd.DataFrame, enc:str='label'):

@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import numpy as np
-from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder, TargetEncoder
 from sklearn.preprocessing import StandardScaler, MaxAbsScaler, MinMaxScaler, RobustScaler
 
 class Encoder_Module:

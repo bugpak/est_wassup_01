@@ -6,7 +6,7 @@ config = {
         "data_test":"../data/test.csv",
         "output": "./submit/model_",
         "submission":"./submit/submission_",
-        "name": "hidden_dim32_notdrop_nonexternal_0.001_rsme_epoch1000_early200"
+        "name": "final"
     },
     "model_params": {
         "hidden_dim": 32,
@@ -19,10 +19,10 @@ config = {
         },
         "optim_params": {"lr": 0.001, },
         "device": "cuda",
-        "epochs": 1000,
+        "epochs": 1500,
         "pbar": True,
         "min_delta": 0,
-        "patience": 200,
+        "patience": 100,
     },
     "train": True,
     "validation": True,
